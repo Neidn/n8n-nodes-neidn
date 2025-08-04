@@ -5,4 +5,19 @@ tmp
 dist
 npm-debug.log*
 yarn.lock
-.vscode/launch.json
+package-lock.json
+
+
+# IDE
+.vscode
+.idea
+
+# Claude
+.claude
+CLAUDE.md
+
+.npmignore
+.prettierrc.js
+.editorconfig
+.eslintrc.js
+.eslintrc.prepublish.js
