@@ -5,10 +5,31 @@ export class BrowserManager {
     private context: BrowserContext | null = null;
     private page: Page | null = null;
 
+    async launchBrowser(slowMo: number = 500): Promise<Page> {
+        try {
+            console.log(`Launching browser with slowMo: ${slowMo}ms...`);
+            this.browser = await chromium.launch({
+                headless: false,
+                slowMo: slowMo
+            });
+            
+            this.context = await this.browser.newContext();
+            this.page = await this.context.newPage();
+
+            console.log('Successfully launched browser');
+            return this.page;
+        } catch (error) {
+            console.error('Failed to launch browser:', error);
+            throw new Error('Failed to launch browser');
+        }
+    }
+
     async connectToDebugBrowser(debugPort: number = 9222): Promise<Page> {
         try {
             console.log(`Connecting to debug browser on port ${debugPort}...`);
-            this.browser = await chromium.connectOverCDP(`http://localhost:${debugPort}`);
+            this.browser = await chromium.connectOverCDP(
+                `http://localhost:${debugPort}`,
+            );
             
             const contexts = this.browser.contexts();
             if (contexts.length > 0) {
@@ -29,6 +50,17 @@ export class BrowserManager {
         } catch (error) {
             console.error('Failed to connect to debug browser:', error);
             throw new Error(`Failed to connect to debug browser on port ${debugPort}. Make sure Chrome is running with --remote-debugging-port=${debugPort}`);
+        }
+    }
+
+    async connectToBrowserOrLaunch(debugPort: number = 9222, slowMo: number = 500): Promise<Page> {
+        try {
+            // First try to connect to debug browser
+            return await this.connectToDebugBrowser(debugPort);
+        } catch (error) {
+            console.log('Debug browser not available, launching new browser...');
+            // If debug browser is not available, launch new browser with slowMo
+            return await this.launchBrowser(slowMo);
         }
     }
 

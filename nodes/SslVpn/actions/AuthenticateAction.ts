@@ -32,7 +32,8 @@ export class AuthenticateAction {
                 timestamp: new Date().toISOString()
             };
         } catch (error) {
-            throw new Error(`Authentication failed: ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(`Authentication failed: ${errorMessage}`);
         }
     }
 }

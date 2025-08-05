@@ -54,7 +54,8 @@ export class ExtractAction {
                 count: vpcData.length
             };
         } catch (error) {
-            throw new Error(`Data extraction failed: ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(`Data extraction failed: ${errorMessage}`);
         }
     }
 }

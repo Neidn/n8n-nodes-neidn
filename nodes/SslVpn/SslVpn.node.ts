@@ -3,6 +3,7 @@ import {
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
+	NodeApiError,
 	NodeOperationError,
 } from 'n8n-workflow';
 
@@ -22,8 +23,8 @@ export class SslVpn implements INodeType {
 		defaults: {
 			name: 'SSL VPN',
 		},
-		inputs: ['main'],
-		outputs: ['main'],
+		inputs: ['main'] as any,
+		outputs: ['main'] as any,
 		credentials: [
 			{
 				name: 'sslVpnApi',
@@ -160,20 +161,42 @@ export class SslVpn implements INodeType {
 
 					case 'extract':
 						const extractAction = new ExtractAction();
-						result = await extractAction.execute(credentials, debugPort, manualSms, popupTimeout, dataTimeout);
+						result = await extractAction.execute(
+							credentials,
+							debugPort,
+							manualSms,
+							popupTimeout,
+							dataTimeout,
+						);
 						break;
 
 					case 'full':
 						const fullAction = new FullAction();
-						result = await fullAction.execute(credentials, debugPort, manualSms, popupTimeout, dataTimeout);
+						result = await fullAction.execute(
+							credentials,
+							debugPort,
+							manualSms,
+							popupTimeout,
+							dataTimeout,
+						);
 						break;
 
 					default:
-						throw new Error(`Unknown action: ${action}`);
+						const nodeApiError = new NodeApiError(this.getNode(), {
+							message: `Unknown action: ${action}`,
+							description: 'Please select a valid action from the node options.',
+						});
+
+						throw nodeApiError;
 				}
 
 				// Handle output formatting for extraction actions
-				if ((action === 'extract' || action === 'full') && result.success && result.data && outputFormat === 'items') {
+				if (
+					(action === 'extract' || action === 'full') &&
+					result.success &&
+					result.data &&
+					outputFormat === 'items'
+				) {
 					// Output each VPC as a separate item
 					for (const vpc of result.data) {
 						returnData.push({
@@ -184,8 +207,8 @@ export class SslVpn implements INodeType {
 									message: result.message,
 									action: action,
 									timestamp: result.timestamp,
-									totalCount: result.count
-								}
+									totalCount: result.count,
+								},
 							},
 							pairedItem: { item: i },
 						});
@@ -195,7 +218,7 @@ export class SslVpn implements INodeType {
 					returnData.push({
 						json: {
 							...result,
-							action: action
+							action: action,
 						},
 						pairedItem: { item: i },
 					});
@@ -203,17 +226,18 @@ export class SslVpn implements INodeType {
 			} catch (error) {
 				if (this.continueOnFail()) {
 					returnData.push({
-						json: { 
-							success: false, 
-							error: error.message,
+						json: {
+							success: false,
+							error: error instanceof Error ? error.message : String(error),
 							action: this.getNodeParameter('action', i) as string,
-							timestamp: new Date().toISOString()
+							timestamp: new Date().toISOString(),
 						},
 						pairedItem: { item: i },
 					});
 					continue;
 				}
-				throw new NodeOperationError(this.getNode(), error.message);
+				const errorMessage = error instanceof Error ? error.message : String(error);
+				throw new NodeOperationError(this.getNode(), errorMessage);
 			}
 		}
 

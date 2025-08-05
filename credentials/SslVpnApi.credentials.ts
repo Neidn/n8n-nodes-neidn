@@ -1,9 +1,4 @@
-import {
-	IAuthenticateGeneric,
-	ICredentialTestRequest,
-	ICredentialType,
-	INodeProperties,
-} from 'n8n-workflow';
+import { ICredentialTestRequest, ICredentialType, INodeProperties } from 'n8n-workflow';
 
 export class SslVpnApi implements ICredentialType {
 	name = 'sslVpnApi';

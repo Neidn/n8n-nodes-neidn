@@ -39,7 +39,8 @@ export class ConsoleAction {
                 timestamp: new Date().toISOString()
             };
         } catch (error) {
-            throw new Error(`Console navigation failed: ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(`Console navigation failed: ${errorMessage}`);
         }
     }
 }
