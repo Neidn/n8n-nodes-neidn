@@ -48,7 +48,7 @@ export class SslVpnApi implements ICredentialType {
 		{
 			displayName: 'Password',
 			name: 'password',
-			type: 'password',
+			type: 'string',
 			default: '',
 			required: true,
 			description: 'The password for authentication',
