@@ -1,0 +1,84 @@
+import { IExecuteFunctions, INodeExecutionData, NodeOperationError } from 'n8n-workflow';
+
+import type { Browser, BrowserType } from 'playwright';
+
+export interface PlaywrightActionContext {
+	executeFunctions: IExecuteFunctions;
+	itemIndex: number;
+	items: INodeExecutionData[];
+	playwright: any;
+}
+
+export abstract class BaseAction {
+	protected browserInstances = new Map<string, Browser>();
+
+	protected async getBrowserInstance(
+		browserType: string,
+		playwright: any,
+		options: any = {},
+	): Promise<Browser> {
+		const cacheKey = `${browserType}-${JSON.stringify(options)}`;
+
+		if (this.browserInstances.has(cacheKey)) {
+			const browser = this.browserInstances.get(cacheKey)!;
+			if (browser.isConnected()) {
+				return browser;
+			} else {
+				this.browserInstances.delete(cacheKey);
+			}
+		}
+
+		const browserEngine = playwright[browserType] as BrowserType;
+		const launchOptions = {
+			headless: options.headless ?? true,
+			ignoreHTTPSErrors: options.ignoreHTTPSErrors ?? false,
+			args: ['--no-sandbox', '--disable-setuid-sandbox'],
+		};
+
+		const browser = await browserEngine.launch(launchOptions);
+		this.browserInstances.set(cacheKey, browser);
+		return browser;
+	}
+
+	public async cleanupBrowsers(): Promise<void> {
+		for (const [key, browser] of this.browserInstances) {
+			try {
+				if (browser.isConnected()) {
+					await browser.close();
+				}
+			} catch (error) {
+				// Ignore cleanup errors
+			}
+			this.browserInstances.delete(key);
+		}
+	}
+
+	protected createScriptConsole(itemIndex: number) {
+		return {
+			log: (...args: any[]) => {
+				// eslint-disable-next-line no-console
+				console.log(`[PlaywrightScript Item ${itemIndex}]:`, ...args);
+			},
+			error: (...args: any[]) => {
+				// eslint-disable-next-line no-console
+				console.error(`[PlaywrightScript Item ${itemIndex}]:`, ...args);
+			},
+		};
+	}
+
+	protected createScriptRequire(executeFunctions: IExecuteFunctions) {
+		return (moduleName: string) => {
+			// Allow require for common modules
+			const allowedModules = ['fs', 'path', 'crypto', 'util', 'os', 'url'];
+			if (allowedModules.includes(moduleName)) {
+				return require(moduleName);
+			}
+			throw new NodeOperationError(
+				executeFunctions.getNode(),
+				`Module '${moduleName}' is not allowed for security reasons`,
+			);
+		};
+	}
+
+	abstract execute(context: PlaywrightActionContext, ...args: any[]): Promise<any>;
+}

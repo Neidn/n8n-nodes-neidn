@@ -41,25 +41,28 @@ export class SslVpn implements INodeType {
 						name: 'Authenticate Only',
 						value: 'authenticate',
 						description: 'Perform login and SMS authentication',
+						action: 'Perform login and SMS authentication',
 					},
 					{
 						name: 'Navigate to Console',
 						value: 'console',
 						description: 'Authenticate and navigate to NCP console',
+						action: 'Authenticate and navigate to NCP console',
 					},
 					{
 						name: 'Extract VPC Data',
 						value: 'extract',
 						description: 'Complete flow: authenticate, navigate, and extract VPC data',
+						action: 'Complete flow authenticate navigate and extract vpc data',
 					},
 					{
 						name: 'Full Process',
 						value: 'full',
 						description: 'Run all steps in sequence (authenticate → console → extract)',
+						action: 'Run all steps in sequence authenticate console extract',
 					},
 				],
 				default: 'full',
-				description: 'Choose which SSL VPN operation to perform',
 			},
 			{
 				displayName: 'Browser Debug Port',
@@ -73,7 +76,7 @@ export class SslVpn implements INodeType {
 				name: 'manualSms',
 				type: 'boolean',
 				default: true,
-				description: 'Wait for manual SMS input in browser (recommended)',
+				description: 'Whether to wait for manual SMS input in browser (recommended)',
 				displayOptions: {
 					show: {
 						action: ['authenticate', 'console', 'extract', 'full'],

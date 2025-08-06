@@ -36,7 +36,8 @@
       "dist/credentials/SslVpnApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/SslVpn/SslVpn.node.js"
+      "dist/nodes/SslVpn/SslVpn.node.js",
+      "dist/nodes/PlaywrightScript/PlaywrightScript.node.js"
     ]
   },
   "devDependencies": {
