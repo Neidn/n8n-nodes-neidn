@@ -68,10 +68,18 @@ export abstract class BaseAction {
 
 	protected createScriptRequire(executeFunctions: IExecuteFunctions) {
 		return (moduleName: string) => {
-			// Allow require for common modules
+			// Allow require for common modules using dynamic import for Alpine compatibility
 			const allowedModules = ['fs', 'path', 'crypto', 'util', 'os', 'url'];
 			if (allowedModules.includes(moduleName)) {
-				return require(moduleName);
+				// Use dynamic import for Alpine Docker compatibility
+				try {
+					return eval(`require('${moduleName}')`);
+				} catch (error) {
+					throw new NodeOperationError(
+						executeFunctions.getNode(),
+						`Failed to load module '${moduleName}': ${error}`,
+					);
+				}
 			}
 			throw new NodeOperationError(
 				executeFunctions.getNode(),

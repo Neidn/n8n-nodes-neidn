@@ -273,7 +273,7 @@ export class DataExtractor {
 		);
 
 		// Go to SSL VPN page after extracting data
-		const sslVpnUrl = process.env.SSL_VPN_CONSOLE_URL;
+		const sslVpnUrl = typeof process !== 'undefined' ? process.env?.SSL_VPN_CONSOLE_URL : undefined;
 		if (sslVpnUrl) {
 			console.log('Navigating back to SSL VPN page...');
 			await page.goto(sslVpnUrl);
