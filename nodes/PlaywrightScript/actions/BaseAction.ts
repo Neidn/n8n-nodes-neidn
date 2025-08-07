@@ -28,9 +28,10 @@ export abstract class BaseAction {
 			}
 		}
 
-		const browserEngine = playwright[browserType] as BrowserType;
+		// Force chromium browser
+		const browserEngine = playwright.chromium as BrowserType;
 		const launchOptions = {
-			headless: options.headless ?? true,
+			headless: false, // Always non-headless for chromium
 			ignoreHTTPSErrors: options.ignoreHTTPSErrors ?? false,
 			args: ['--no-sandbox', '--disable-setuid-sandbox'],
 		};
