@@ -20,7 +20,7 @@ export class BrowserManager implements ICredentialType {
 			name: 'headless',
 			type: 'boolean',
 			default: false,
-			description: 'Whether to run browser in headless mode (forced to false for Chromium)',
+			description: 'Whether to run browser in headless mode (default: false for visible browser)',
 		},
 	];
 }
