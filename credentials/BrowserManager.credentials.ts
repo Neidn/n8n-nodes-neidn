@@ -19,8 +19,8 @@ export class BrowserManager implements ICredentialType {
 			displayName: 'Headless Mode',
 			name: 'headless',
 			type: 'boolean',
-			default: false,
-			description: 'Whether to run browser in headless mode (default: false for visible browser)',
+			default: true,
+			description: 'Whether to run browser in headless mode (default: true for background operation)',
 		},
 	];
 }

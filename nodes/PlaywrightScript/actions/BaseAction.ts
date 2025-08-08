@@ -32,7 +32,7 @@ export abstract class BaseAction {
 		const browserEngine = playwright.chromium as BrowserType;
 		const launchOptions = {
 			executablePath: '/usr/bin/chromium-browser', // Alpine Docker chromium path
-			headless: options.headless ?? false, // Default to false (visible), configurable
+			headless: options.headless !== false, // Always headless unless explicitly set to false
 			ignoreHTTPSErrors: options.ignoreHTTPSErrors ?? false,
 			args: ['--no-sandbox', '--disable-setuid-sandbox'],
 		};
