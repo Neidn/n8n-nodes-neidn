@@ -197,9 +197,10 @@ try {
 				displayName: 'Session ID',
 				name: 'sessionId',
 				type: 'string',
-				default: '',
+				default: 'default-session',
 				placeholder: 'session-123456789-abc',
 				description: 'Browser session ID to interact with or close',
+				required: true,
 				displayOptions: {
 					show: {
 						scriptMode: ['interact', 'close'],
@@ -414,8 +415,8 @@ return {
 					if (scriptMode === 'launch') {
 						result = await browserLaunchAction.execute(context);
 					} else if (scriptMode === 'interact') {
-						const sessionId = this.getNodeParameter('sessionId', itemIndex) as string;
-						if (!sessionId) {
+						const sessionId = this.getNodeParameter('sessionId', itemIndex, 'default-session') as string;
+						if (!sessionId || sessionId.trim() === '') {
 							throw new NodeOperationError(this.getNode(), 'Session ID is required for browser interaction');
 						}
 						result = await browserInteractAction.execute(context, sessionId);
