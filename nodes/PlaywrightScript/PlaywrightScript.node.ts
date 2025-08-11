@@ -8,12 +8,12 @@ import {
 } from 'n8n-workflow';
 
 import type {Browser} from 'playwright';
-import {ManagedScriptAction} from './actions/ManagedScriptAction';
-import {CustomScriptAction} from './actions/CustomScriptAction';
-import {BrowserLaunchAction} from './actions/BrowserLaunchAction';
-import {BrowserInteractAction} from './actions/BrowserInteractAction';
-import {BrowserCloseAction} from './actions/BrowserCloseAction';
-import {PlaywrightActionContext} from './actions/BaseAction';
+import {ManagedScriptAction} from './actions';
+import {CustomScriptAction} from './actions';
+import {BrowserLaunchAction} from './actions';
+import {BrowserInteractAction} from './actions';
+import {BrowserCloseAction} from './actions';
+import {PlaywrightActionContext} from './actions';
 
 export class PlaywrightScript implements INodeType {
 	description: INodeTypeDescription = {
