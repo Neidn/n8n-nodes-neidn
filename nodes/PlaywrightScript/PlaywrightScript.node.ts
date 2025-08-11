@@ -7,13 +7,13 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 
-import type { Browser } from 'playwright';
-import { ManagedScriptAction } from './actions/ManagedScriptAction';
-import { CustomScriptAction } from './actions/CustomScriptAction';
-import { BrowserLaunchAction } from './actions/BrowserLaunchAction';
-import { BrowserInteractAction } from './actions/BrowserInteractAction';
-import { BrowserCloseAction } from './actions/BrowserCloseAction';
-import { PlaywrightActionContext } from './actions/BaseAction';
+import type {Browser} from 'playwright';
+import {ManagedScriptAction} from './actions/ManagedScriptAction';
+import {CustomScriptAction} from './actions/CustomScriptAction';
+import {BrowserLaunchAction} from './actions/BrowserLaunchAction';
+import {BrowserInteractAction} from './actions/BrowserInteractAction';
+import {BrowserCloseAction} from './actions/BrowserCloseAction';
+import {PlaywrightActionContext} from './actions/BaseAction';
 
 export class PlaywrightScript implements INodeType {
 	description: INodeTypeDescription = {
@@ -33,12 +33,14 @@ export class PlaywrightScript implements INodeType {
 				displayName: 'Browser Type',
 				name: 'browserType',
 				type: 'options',
+				default: 'chromium',
 				options: [
 					{
 						name: 'Chromium',
 						value: 'chromium',
 						description: 'Use Chromium browser (fastest)',
 					},
+					/*
 					{
 						name: 'Firefox',
 						value: 'firefox',
@@ -49,8 +51,8 @@ export class PlaywrightScript implements INodeType {
 						value: 'webkit',
 						description: 'Use Safari WebKit browser',
 					},
+					 */
 				],
-				default: 'chromium',
 				description: 'Browser engine to use for automation',
 			},
 			{
@@ -97,7 +99,7 @@ export class PlaywrightScript implements INodeType {
 				},
 				default: `// Available variables in Managed Browser mode:
 // - items: Input data array
-// - $json: Current item's JSON data  
+// - $json: Current item's JSON data
 // - $index: Current item index
 // - page: Ready-to-use page instance
 // - browser: Browser instance (for advanced usage)
@@ -110,12 +112,22 @@ await page.goto('https://example.com');
 const title = await page.title();
 
 // Extract some data
-const headings = await page.$$eval('h1, h2, h3', elements => 
+const headings = await page.$$eval('h1, h2, h3', elements =>
   elements.map(el => ({ tag: el.tagName, text: el.textContent }))
 );
 
-// Take a screenshot (returns buffer)
-const screenshot = await page.screenshot({ type: 'png' });
+// Take a screenshot and save to file
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+
+const outputDir = path.join(os.homedir(), '.n8n', 'outputfiles');
+if (!fs.existsSync(outputDir)) {
+  fs.mkdirSync(outputDir, { recursive: true });
+}
+
+const screenshotPath = path.join(outputDir, \`screenshot_\${Date.now()}.png\`);
+await page.screenshot({ path: screenshotPath, type: 'png' });
 
 // Return structured data
 return {
@@ -123,7 +135,7 @@ return {
   url: page.url(),
   title,
   headings,
-  screenshot: screenshot.toString('base64'),
+  screenshotPath,
   timestamp: new Date().toISOString()
 };`,
 				description: 'Custom Node.js script to execute with Playwright',
@@ -157,15 +169,15 @@ const browser = await chromium.launch({
 
 try {
   const page = await browser.newPage();
-  
+
   // Set viewport and user agent
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.setUserAgent('Mozilla/5.0 (compatible; n8n-playwright)');
-  
+
   // Navigate and interact
   await page.goto('https://httpbin.org/json');
   const jsonData = await page.textContent('pre');
-  
+
   return {
     success: true,
     data: JSON.parse(jsonData),
@@ -214,15 +226,25 @@ try {
 // Navigate to a website
 await page.goto('https://example.com');
 
-// Take a screenshot
-const screenshot = await page.screenshot({ type: 'png' });
-
 // Get page title and URL
 const title = await page.title();
 const url = page.url();
 
+// Take a screenshot and save to file
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+
+const outputDir = path.join(os.homedir(), '.n8n', 'outputfiles');
+if (!fs.existsSync(outputDir)) {
+  fs.mkdirSync(outputDir, { recursive: true });
+}
+
+const screenshotPath = path.join(outputDir, \`screenshot_\${Date.now()}.png\`);
+await page.screenshot({ path: screenshotPath, type: 'png' });
+
 // Extract data from the page
-const headings = await page.$$eval('h1, h2, h3', elements => 
+const headings = await page.$$eval('h1, h2, h3', elements =>
   elements.map(el => ({ tag: el.tagName, text: el.textContent }))
 );
 
@@ -231,7 +253,7 @@ return {
   title,
   url,
   headings,
-  screenshot: screenshot.toString('base64')
+  screenshotPath
 };`,
 				description: 'JavaScript code to execute with the browser page',
 				displayOptions: {
@@ -358,7 +380,7 @@ return {
 		const browserLaunchAction = new BrowserLaunchAction();
 		const browserInteractAction = new BrowserInteractAction();
 		const browserCloseAction = new BrowserCloseAction();
-		
+
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 
@@ -381,14 +403,14 @@ return {
 			for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 				try {
 					let result: any;
-					
+
 					const context: PlaywrightActionContext = {
 						executeFunctions: this,
 						itemIndex,
 						items,
 						playwright,
 					};
-					
+
 					if (scriptMode === 'launch') {
 						result = await browserLaunchAction.execute(context);
 					} else if (scriptMode === 'interact') {
@@ -421,17 +443,17 @@ return {
 								result: null,
 								itemIndex,
 							},
-							pairedItem: { item: itemIndex },
+							pairedItem: {item: itemIndex},
 						});
 					} else if (typeof result === 'object') {
 						// Remove internal browser reference from result
-						const { browser: _, ...cleanResult } = result;
+						const {browser: _, ...cleanResult} = result;
 						returnData.push({
 							json: {
 								...cleanResult,
 								itemIndex,
 							},
-							pairedItem: { item: itemIndex },
+							pairedItem: {item: itemIndex},
 						});
 					} else {
 						returnData.push({
@@ -440,13 +462,13 @@ return {
 								result,
 								itemIndex,
 							},
-							pairedItem: { item: itemIndex },
+							pairedItem: {item: itemIndex},
 						});
 					}
 
 				} catch (error) {
 					const errorMessage = error instanceof Error ? error.message : String(error);
-					
+
 					if (this.continueOnFail() || this.getNodeParameter('continueOnFail', itemIndex, false)) {
 						returnData.push({
 							json: {
@@ -455,11 +477,11 @@ return {
 								itemIndex,
 								timestamp: new Date().toISOString(),
 							},
-							pairedItem: { item: itemIndex },
+							pairedItem: {item: itemIndex},
 						});
 						continue;
 					}
-					
+
 					throw new NodeOperationError(this.getNode(), `Script execution failed: ${errorMessage}`);
 				}
 			}
@@ -472,7 +494,7 @@ return {
 					// Ignore cleanup errors
 				}
 			}
-			
+
 			// Clean up any remaining browser instances if not reusing
 			if (!reuseBrowser) {
 				await managedScriptAction.cleanupBrowsers();
